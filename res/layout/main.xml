@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+    
+	<TextView  
+    	android:layout_width="fill_parent" 
+    	android:layout_height="wrap_content"
+    	android:paddingLeft="5dp"
+    	android:paddingRight="5dp"
+    	android:paddingTop="1dp"
+    	android:paddingBottom="1dp"
+    	android:background="#0066AA"
+    	android:textSize="24dp" 
+    	android:textColor="#FFFFFF"
+    	android:text="@string/app_name" />
+    	
+    <View
+   		android:layout_width="fill_parent"
+   		android:layout_height="1px"
+   		android:background="#000000" />
+   		
+   	<TextView
+    	android:layout_width="fill_parent" 
+    	android:layout_height="wrap_content"
+    	android:paddingLeft="10dp"
+    	android:paddingRight="10dp"
+    	android:paddingTop="1dp"
+    	android:paddingBottom="1dp"
+    	android:background="#FF9922" 
+    	android:textSize="20dp"
+    	android:textColor="#000000"
+    	android:text="Average Peak" />
+    	
+    <View
+   		android:layout_width="fill_parent"
+   		android:layout_height="1px"
+   		android:background="#000000" />
+   		
+   	<TextView
+    	android:layout_width="fill_parent" 
+    	android:layout_height="wrap_content"
+    	android:gravity="center_horizontal"
+    	android:background="#555555" 
+    	android:textSize="54dp"
+    	android:textColor="#FFFFFF" 
+    	android:text="12345" />
+    	
+    <View
+   		android:layout_width="fill_parent"
+   		android:layout_height="1px"
+   		android:background="#000000" />
+   		
+   	<TextView
+    	android:layout_width="fill_parent" 
+    	android:layout_height="wrap_content"
+    	android:paddingLeft="10dp"
+    	android:paddingRight="10dp"
+    	android:paddingTop="1dp"
+    	android:paddingBottom="1dp"
+    	android:background="#FF9922" 
+    	android:textSize="20dp"
+    	android:textColor="#000000"
+    	android:text="SPL (Sound Pressure Level)" />
+    	
+    <View
+   		android:layout_width="fill_parent"
+   		android:layout_height="1px"
+   		android:background="#000000" />
+   		
+   	<TextView
+    	android:layout_width="fill_parent" 
+    	android:layout_height="wrap_content"
+    	android:gravity="center_horizontal"
+    	android:background="#555555" 
+    	android:textSize="54dp"
+    	android:textColor="#FFFFFF" 
+    	android:text="12345" />
+    	
+    <View
+   		android:layout_width="fill_parent"
+   		android:layout_height="1px"
+   		android:background="#000000" />
+   		
+   	<TextView
+    	android:layout_width="fill_parent" 
+    	android:layout_height="wrap_content" 
+    	android:paddingLeft="10dp"
+    	android:paddingRight="10dp"
+    	android:paddingTop="1dp"
+    	android:paddingBottom="1dp"
+    	android:background="#FF9922" 
+    	android:textSize="20dp"
+    	android:textColor="#000000"
+    	android:text="Interval (in seconds)" />
+    	
+    <View
+   		android:layout_width="fill_parent"
+   		android:layout_height="1px"
+   		android:background="#000000" />
+   		
+   	<RadioGroup
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:background="#555555" 
+		android:orientation="horizontal">
+      	
+      	<RadioButton android:id="@+id/radio_1"
+        	android:layout_width="wrap_content"
+        	android:layout_height="wrap_content"
+        	android:layout_weight="1"
+        	android:checked="true"
+        	android:textSize="30dp"
+        	android:textColor="#FFFFFF"
+        	android:text="0.10" />
+        	
+       	<View
+	   		android:layout_width="1px"
+	   		android:layout_height="fill_parent"
+	   		android:background="#000000" />
+        	
+      	<RadioButton android:id="@+id/radio_2"
+        	android:layout_width="wrap_content"
+          	android:layout_height="wrap_content"
+          	android:layout_weight="1"
+          	android:textSize="30dp"
+          	android:textColor="#FFFFFF"
+          	android:text="0.25" />
+          	
+        <View
+	   		android:layout_width="1px"
+	   		android:layout_height="fill_parent"
+	   		android:background="#000000" />
+          	
+       	<RadioButton android:id="@+id/radio_3"
+        	android:layout_width="wrap_content"
+          	android:layout_height="wrap_content"
+          	android:layout_weight="1"
+          	android:textSize="30dp"
+          	android:textColor="#FFFFFF"
+          	android:text="0.50" />
+          	
+    </RadioGroup>
+    
+    <View
+   		android:layout_width="fill_parent"
+   		android:layout_height="1px"
+   		android:background="#000000" />
+   		
+   	<TextView
+    	android:layout_width="fill_parent" 
+    	android:layout_height="wrap_content" 
+    	android:paddingLeft="10dp"
+    	android:paddingRight="10dp"
+    	android:paddingTop="1dp"
+    	android:paddingBottom="1dp"
+    	android:background="#FF9922" 
+    	android:textSize="20dp"
+    	android:textColor="#000000"
+    	android:text="Microphone Status" />
+    	
+    <View
+   		android:layout_width="fill_parent"
+   		android:layout_height="1px"
+   		android:background="#000000" />
+   		
+   	<TextView
+   		android:id="@+id/mic_status_text"
+    	android:layout_width="fill_parent" 
+    	android:layout_height="wrap_content"
+    	android:gravity="center_horizontal"
+    	android:paddingBottom="4dp"
+    	android:background="#555555" 
+    	android:textSize="28dp"
+    	android:textColor="#FF0000" 
+    	android:text="Not plugged in" />
+    	
+    <View
+   		android:layout_width="fill_parent"
+   		android:layout_height="1px"
+   		android:background="#000000" />
+   		
+   	<TextView
+    	android:layout_width="fill_parent" 
+    	android:layout_height="wrap_content" 
+    	android:paddingLeft="10dp"
+    	android:paddingRight="10dp"
+    	android:paddingTop="1dp"
+    	android:paddingBottom="1dp"
+    	android:background="#FF9922" 
+    	android:textSize="20dp"
+    	android:textColor="#000000"
+    	android:text="Control" />
+    	
+    <View
+   		android:layout_width="fill_parent"
+   		android:layout_height="1px"
+   		android:background="#000000" />
+   		
+   	<LinearLayout
+   		android:layout_width="fill_parent" 
+    	android:layout_height="wrap_content"
+    	android:layout_weight="1"
+    	android:padding="4dp"
+    	android:background="#555555">
+    	
+    	<ImageView
+    		android:id="@+id/recording_image"
+    		android:layout_width="wrap_content" 
+    		android:layout_height="wrap_content"
+    		android:layout_gravity="center"
+    		android:paddingLeft="25dp"
+    		android:paddingRight="25dp"
+    		android:src="@drawable/rec_ind_2_off" />
+    	
+    	<Button
+    		android:id="@+id/control_button"
+    		android:layout_width="fill_parent" 
+    		android:layout_height="fill_parent"
+    		android:textSize="28dp"
+    		android:text="Start" />
+    	
+   	</LinearLayout>
+   	    
+</LinearLayout>
