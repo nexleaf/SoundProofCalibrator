@@ -1,5 +1,6 @@
 package org.nexleaf.soundproof.preamp;
 
+import java.text.DecimalFormat;
 import java.util.Map;
 
 import org.nexleaf.soundproof.preamp.AudioService.AudioBinder;
@@ -154,13 +155,24 @@ public class MainActivity extends Activity implements IListener{
     }
 	
 	@Override
-	public void onValuesUpdated(final Map<String, Double> values) {
+	public void onPeakUpdated(final int value) {
 		runOnUiThread(new Runnable() {
 			
 			@Override
 			public void run() {
-				mPeakText.setText(String.valueOf(values.get(AudioService.PEAK)));
-				mSplText.setText(String.valueOf(values.get(AudioService.SPL)));
+				mPeakText.setText(String.valueOf(value));
+			}
+		});
+	}
+	
+	@Override
+	public void onSplUpdated(final double value) {
+		runOnUiThread(new Runnable() {
+			
+			@Override
+			public void run() {
+				DecimalFormat df = new DecimalFormat("#.##");
+				mSplText.setText(df.format(value));
 			}
 		});
 	}
