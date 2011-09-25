@@ -1,33 +1,51 @@
 package org.nexleaf.soundproof.preamp;
 
+import java.util.Map;
+
+import org.nexleaf.soundproof.preamp.AudioService.AudioBinder;
+import org.nexleaf.soundproof.preamp.AudioService.IListener;
+
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.RadioGroup.OnCheckedChangeListener;
 
 import com.commonsware.cwac.wakeful.WakefulIntentService;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements IListener{
 	
     private static final String TAG = "MainActivity";
     
+    AudioService mService;
     SharedPreferences mPrefs;
     Button mButton;
+    TextView mPeakText;
+    TextView mSplText;
     TextView mMicStatusText;
     ImageView mRecordingIndicatorImage;
+    RadioGroup mRadioGroup;
+    RadioButton mRadio10;
+    RadioButton mRadio25;
+    RadioButton mRadio50;
+    double mInterval;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -37,8 +55,35 @@ public class MainActivity extends Activity {
         mPrefs = getSharedPreferences("prefs", MODE_PRIVATE);
         
         mButton = (Button) findViewById(R.id.control_button);
+        mPeakText = (TextView) findViewById(R.id.peak_text);
+        mSplText = (TextView) findViewById(R.id.spl_text);
         mMicStatusText = (TextView) findViewById(R.id.mic_status_text);
         mRecordingIndicatorImage = (ImageView) findViewById(R.id.recording_image);
+        mRadioGroup = (RadioGroup) findViewById(R.id.radio_group);
+        mRadio10 = ((RadioButton)findViewById(R.id.radio_10));
+        mRadio25 = ((RadioButton)findViewById(R.id.radio_25));
+        mRadio50 = ((RadioButton)findViewById(R.id.radio_50));
+        
+        mRadioGroup.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+			
+			@Override
+			public void onCheckedChanged(RadioGroup group, int checkedId) {
+				
+				switch (checkedId) {
+				case R.id.radio_10:
+					mInterval = 0.10;
+					break;
+					
+				case R.id.radio_25:
+					mInterval = 0.25;
+					break;
+					
+				case R.id.radio_50:
+					mInterval = 0.50;
+					break;
+				}
+			}
+		});
         
         mButton.setOnClickListener(new OnClickListener() {
 			
@@ -49,10 +94,18 @@ public class MainActivity extends Activity {
 				updateButtonAndIndicatorState(recording);
 				
 				if (recording) {
-					WakefulIntentService.sendWakefulWork(MainActivity.this, AudioService.class);
+					Intent intent = new Intent(MainActivity.this, AudioService.class);
+			    	intent.putExtra(AudioService.EXTRA_INTERVAL, mInterval);
+			    	WakefulIntentService.sendWakefulWork(MainActivity.this, intent);
+					bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
 				}
 			}
 		});
+
+        mPeakText.setText("-----");
+		mSplText.setText("-----");
+        
+        mRadio10.setChecked(true);
     }
     
     @Override
@@ -81,14 +134,51 @@ public class MainActivity extends Activity {
 
 	private void updateButtonAndIndicatorState(boolean isRecording) {
 		if (isRecording) {
+			mRadio10.setEnabled(false);
+			mRadio25.setEnabled(false);
+			mRadio50.setEnabled(false);
+			mPeakText.setEnabled(false);
+			mSplText.setEnabled(false);
 			mButton.setText("Stop");
 			mRecordingIndicatorImage.setImageResource(R.drawable.recording_indicator);
 			((AnimationDrawable) mRecordingIndicatorImage.getDrawable()).start();
 		} else {
+			mRadio10.setEnabled(true);
+			mRadio25.setEnabled(true);
+			mRadio50.setEnabled(true);
+			mPeakText.setEnabled(true);
+			mSplText.setEnabled(true);
 			mButton.setText("Start");
 			mRecordingIndicatorImage.setImageResource(R.drawable.rec_ind_2_off);
 		}
     }
+	
+	@Override
+	public void onValuesUpdated(final Map<String, Double> values) {
+		runOnUiThread(new Runnable() {
+			
+			@Override
+			public void run() {
+				mPeakText.setText(String.valueOf(values.get(AudioService.PEAK)));
+				mSplText.setText(String.valueOf(values.get(AudioService.SPL)));
+			}
+		});
+	}
+	
+	private ServiceConnection mConnection = new ServiceConnection() {
+		
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			mService = null;
+		}
+		
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			AudioBinder binder = (AudioBinder) service;
+			mService = binder.getService();
+			mService.setListener(MainActivity.this);
+		}
+	};
 	
 	BroadcastReceiver mHeadsetReceiver = new BroadcastReceiver() {
 		

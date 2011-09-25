@@ -39,12 +39,13 @@
    		android:background="#000000" />
    		
    	<TextView
+   		android:id="@+id/peak_text"
     	android:layout_width="fill_parent" 
     	android:layout_height="wrap_content"
     	android:gravity="center_horizontal"
     	android:background="#555555" 
     	android:textSize="54dp"
-    	android:textColor="#FFFFFF" 
+    	android:textColor="@color/textview"
     	android:text="12345" />
     	
     <View
@@ -70,12 +71,13 @@
    		android:background="#000000" />
    		
    	<TextView
+   		android:id="@+id/spl_text"
     	android:layout_width="fill_parent" 
     	android:layout_height="wrap_content"
     	android:gravity="center_horizontal"
     	android:background="#555555" 
     	android:textSize="54dp"
-    	android:textColor="#FFFFFF" 
+    	android:textColor="@color/textview"
     	android:text="12345" />
     	
     <View
@@ -101,18 +103,18 @@
    		android:background="#000000" />
    		
    	<RadioGroup
+   		android:id="@+id/radio_group"
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
 		android:background="#555555" 
 		android:orientation="horizontal">
       	
-      	<RadioButton android:id="@+id/radio_1"
+      	<RadioButton android:id="@+id/radio_10"
         	android:layout_width="wrap_content"
         	android:layout_height="wrap_content"
         	android:layout_weight="1"
-        	android:checked="true"
         	android:textSize="30dp"
-        	android:textColor="#FFFFFF"
+        	android:textColor="@color/textview"
         	android:text="0.10" />
         	
        	<View
@@ -120,12 +122,12 @@
 	   		android:layout_height="fill_parent"
 	   		android:background="#000000" />
         	
-      	<RadioButton android:id="@+id/radio_2"
+      	<RadioButton android:id="@+id/radio_25"
         	android:layout_width="wrap_content"
           	android:layout_height="wrap_content"
           	android:layout_weight="1"
           	android:textSize="30dp"
-          	android:textColor="#FFFFFF"
+          	android:textColor="@color/textview"
           	android:text="0.25" />
           	
         <View
@@ -133,12 +135,12 @@
 	   		android:layout_height="fill_parent"
 	   		android:background="#000000" />
           	
-       	<RadioButton android:id="@+id/radio_3"
+       	<RadioButton android:id="@+id/radio_50"
         	android:layout_width="wrap_content"
           	android:layout_height="wrap_content"
           	android:layout_weight="1"
           	android:textSize="30dp"
-          	android:textColor="#FFFFFF"
+          	android:textColor="@color/textview"
           	android:text="0.50" />
           	
     </RadioGroup>

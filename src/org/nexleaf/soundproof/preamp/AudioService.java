@@ -1,11 +1,16 @@
 package org.nexleaf.soundproof.preamp;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.os.Binder;
+import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -18,15 +23,44 @@ public class AudioService extends WakefulIntentService {
 	private static final int CHANNEL_CONFIGURATION = AudioFormat.CHANNEL_CONFIGURATION_MONO;
 	private static final int AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
 	private static final double DEFAULT_INTERVAL = 0.1;
+	
+	public static final String EXTRA_INTERVAL = "interval";
+	public static final String PEAK = "peak";
+	public static final String SPL = "spl";
+	
+	private IListener mListener;
 
 	public AudioService() {
 		super(TAG);
+	}
+	
+	public interface IListener {
+		void onValuesUpdated(Map<String, Double> values);
+	}
+	
+	private final IBinder mBinder = new AudioBinder();
+	
+	public class AudioBinder extends Binder {
+		AudioService getService() {
+			return AudioService.this;
+		}
+	}
+	
+	@Override
+    public IBinder onBind(Intent intent) {
+        return mBinder;
+    }
+	
+	public void setListener(IListener listener) {
+		mListener = listener;
 	}
 
 	@Override
 	protected void doWakefulWork(Intent intent) {
 		
-		double interval = intent.getDoubleExtra("interval", DEFAULT_INTERVAL);
+		double interval = intent.getDoubleExtra(EXTRA_INTERVAL, DEFAULT_INTERVAL);
+		
+		Log.v(TAG, "Starting recording with interval " + interval);
 		
 		record16bit(this, interval);
 	}
@@ -73,7 +107,7 @@ public class AudioService extends WakefulIntentService {
 	}
 	
 	private void doProcessing(short [] data, int dataSize) {
-		short max = 0;
+		double max = 0;
 		
 		for (int i = 0; i < dataSize; i++) {
 			if (data[i] > max) {
@@ -82,7 +116,10 @@ public class AudioService extends WakefulIntentService {
 		}
 		
 		Log.v(TAG, "" + max);
-		
+		HashMap<String, Double> values = new HashMap<String, Double>();
+		values.put(PEAK, max);
+		values.put(SPL, max);
+		mListener.onValuesUpdated(values);
 		
 		
 		
