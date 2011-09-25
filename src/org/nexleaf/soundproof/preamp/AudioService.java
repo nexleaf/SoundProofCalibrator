@@ -121,7 +121,10 @@ public class AudioService extends WakefulIntentService {
 		values.put(SPL, max);
 		mListener.onValuesUpdated(values);
 		
-		
+	}
+	
+	
+	private double doSPL(short [] buf, int dataSize) {
 		
 		/******************************
 		 * 	SPL CODE EXAMPLE!!! (Also called A-weighted LEQ)
@@ -192,49 +195,83 @@ public class AudioService extends WakefulIntentService {
 	}
 		// END SPL CODE
 		 ******************/
-		
-		
-		
+		return 0.0;
+	}
+	
+	
+	private double doPeakFinder(short [] buf, int dataSize) {
 		
 		/***********************
 		 * 
 		 * Idea for peak finder
 		 
 		 // all three queues/lists store the indecies, not values
-		 peak_list = []
-		 up_queue = []
-		 down_queue = []
-		 queue_size = 5;
+		 peak_list = array to append to;
+		 peak_size = 10;
+		 up_in_row_last_idx = 0;
+		 up_in_row = 0;
+		 down_in_row_last_idx = 0;
+		 down_in_row = 0;
 		 
 		 for (i = 1; i < databufsize; i++) {
 		 
-		 if (buf[i] > buf[i-1]) {
-		 	// find fail case first... we were adding to downqueue, but no
-		 
-		 
-		 	if (up_queue.length() == queue_size) {
-		 		
-		 	
-		 	}
-		 
-		 }
-		 
-		 
-		 
-		 
-		 
+	 
+	 	
+		 if (buf[i] >= buf[i-1])
+		 { // if going up or equal
+
+			if (up_in_row == peak_size)
+			{
+				// do nothing
+			} 
+			else
+			{
+				up_in_row += 1;
+			}
+			up_in_row_last_idx = i;
+		 	down_in_row = 0;
 		 } 
+		 else
+		 { // if going down
 		 
+			if (down_in_row == peak_size) 		// have seen at least peak_size up and peak_size down, so store and restart!
+			{
+		
+				peak_list.append(up_in_row_last_idx);
+				down_in_row = 0;
+				up_in_row = 0;
+				
+			} 
+			else // going down but not seen peak_size yet
+			{
+		 	   if (up_in_row != peak_size) {
+		 	   		// restart! since going down after not peak_size up
+		 	   		up_in_row = 0;
+		 	   		down_in_row = 0;
+		 	   } else {
+
+		 	   	   down_in_row += 1
+		 	   }
+		 	}
+		}	 
 		 
+		 double avg_peak = 0;
+		 for (int i = 0; i < peak_list.lengt())
+		 {
+		 	avg_peak += buf[peak_list[i]];
+		 }
+		 avg_peak = avg_peak / peak_list.length();
+		 
+		 // avg_peak is the answer!
 		 
 		 * 
 		 * 
 		 * 
 		 */
-		
-		
-		
-		
-		
+		return 0.0;
 	}
+		
+		
+		
+	
 }
