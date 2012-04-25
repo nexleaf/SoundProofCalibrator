@@ -35,7 +35,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioFormat;
+import android.media.AudioManager;
 import android.media.AudioRecord;
+import android.media.AudioTrack;
 import android.media.MediaRecorder;
 import android.os.Binder;
 import android.os.IBinder;
@@ -106,14 +108,20 @@ public class AudioService extends WakefulIntentService {
 	private void record16bit(Context context, double interval) {
 				
 			int minBufferSizeInBytes = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIGURATION, AUDIO_ENCODING);
+			int playMinBufferSizeInBytes = AudioTrack.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIGURATION, AUDIO_ENCODING);
 			int bufferSize = (int) (SAMPLE_RATE * interval);
 			int bufferSizeInBytes = bufferSize * 2;
+			
+			Log.e(TAG, "Record min buf size: " + minBufferSizeInBytes + " -- Play min buf size: " + playMinBufferSizeInBytes + " -- Actual buff size: " + bufferSizeInBytes);
 			
 			if (bufferSizeInBytes < minBufferSizeInBytes) {
 				Log.e(TAG, "Requested buffer size (" + bufferSizeInBytes + ") is smaller than minimum allowed buffer (" + minBufferSizeInBytes + ")");
 				Toast.makeText(context, "Requested buffer size (" + bufferSizeInBytes + ") is smaller than minimum allowed buffer (" + minBufferSizeInBytes + ")", Toast.LENGTH_LONG).show();
 			} else {
 				short[] buffer = new short[bufferSize];
+				
+				AudioTrack track = new AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE, CHANNEL_CONFIGURATION, AUDIO_ENCODING, bufferSizeInBytes, AudioTrack.MODE_STREAM);
+				track.play();
 				
 				AudioRecord audioRecord = new AudioRecord(
 						MediaRecorder.AudioSource.MIC, SAMPLE_RATE, CHANNEL_CONFIGURATION, AUDIO_ENCODING, bufferSizeInBytes);	
@@ -126,6 +134,8 @@ public class AudioService extends WakefulIntentService {
 					
 					if (bufferReadResult > 0) {
 						doProcessing(buffer, bufferSize);
+						//int bufferWriteResult = 
+						track.write(buffer, 0, bufferReadResult);
 					} else {
 						Log.e(TAG, "AudioRecord.read() returned " + bufferReadResult);
 					}
