@@ -27,6 +27,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.nexleaf.soundproof.preamp;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,6 +37,8 @@ import java.util.Map;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.content.res.Resources.NotFoundException;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
@@ -106,13 +111,29 @@ public class AudioService extends WakefulIntentService {
 	//	16 bit, so use shorts, instead of bytes.
 	// If duration is set to -1, then record continously
 	private void record16bit(Context context, double interval) {
-				
+			
+			byte[] byteoutbuffer = new byte[56448];
+			int audioFileBytesIn = 0;
+			try {
+				audioFileBytesIn = getResources().openRawResource(R.raw.signed_16_bit_22050_400hz_30).read(byteoutbuffer);
+			} catch (NotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			short[] outbuffer = new short[audioFileBytesIn/2];
+			ByteBuffer.wrap(byteoutbuffer).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(outbuffer);
+			
+			
 			int minBufferSizeInBytes = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIGURATION, AUDIO_ENCODING);
 			int playMinBufferSizeInBytes = AudioTrack.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIGURATION, AUDIO_ENCODING);
 			int bufferSize = (int) (SAMPLE_RATE * interval);
 			int bufferSizeInBytes = bufferSize * 2;
 			
-			Log.e(TAG, "Record min buf size: " + minBufferSizeInBytes + " -- Play min buf size: " + playMinBufferSizeInBytes + " -- Actual buff size: " + bufferSizeInBytes);
+			
+			Log.e(TAG, "Record min buf size: " + minBufferSizeInBytes + " -- Play min buf size: " + playMinBufferSizeInBytes + " -- Actual buff size: " + bufferSizeInBytes + " -- Read in file: " + audioFileBytesIn);
 			
 			if (bufferSizeInBytes < minBufferSizeInBytes) {
 				Log.e(TAG, "Requested buffer size (" + bufferSizeInBytes + ") is smaller than minimum allowed buffer (" + minBufferSizeInBytes + ")");
@@ -120,7 +141,10 @@ public class AudioService extends WakefulIntentService {
 			} else {
 				short[] buffer = new short[bufferSize];
 				
-				AudioTrack track = new AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE, CHANNEL_CONFIGURATION, AUDIO_ENCODING, bufferSizeInBytes, AudioTrack.MODE_STREAM);
+				AudioTrack track = new AudioTrack(AudioManager.STREAM_MUSIC, 44100, CHANNEL_CONFIGURATION, AUDIO_ENCODING, audioFileBytesIn, AudioTrack.MODE_STATIC);
+				track.write(outbuffer, 0, audioFileBytesIn/2);
+				track.setLoopPoints(0, audioFileBytesIn / 2, -1);
+				Log.e(TAG, "Native sample rate: " + AudioTrack.getNativeOutputSampleRate(AudioTrack.MODE_STATIC));
 				track.play();
 				
 				AudioRecord audioRecord = new AudioRecord(
@@ -134,23 +158,56 @@ public class AudioService extends WakefulIntentService {
 					
 					if (bufferReadResult > 0) {
 						doProcessing(buffer, bufferSize);
-						//int bufferWriteResult = 
-						track.write(buffer, 0, bufferReadResult);
 					} else {
 						Log.e(TAG, "AudioRecord.read() returned " + bufferReadResult);
 					}
 				}
 				
 				audioRecord.stop();
+				track.stop();
 			}
 	}
 	
 	private void doProcessing(short [] data, int dataSize) {
 	
-		mListener.onPeakUpdated(doPeakFinder(data, dataSize));
-		mListener.onSplUpdated(doSPL(data, dataSize));		
+		int avgPeak = doPeakFinder(data, dataSize);
+		mListener.onPeakUpdated(avgPeak);
+		mListener.onSplUpdated(doTempCalculation(avgPeak));				
+		//mListener.onSplUpdated(doSPL(data, dataSize));		
 	}
 	
+	private double doTempCalculation(double avgPeak) {
+		double res1 = 10000;
+		double res2 = 0;
+		double inputpcm = 34362;
+		double ohms_d = ((res1*inputpcm)/avgPeak) - (res1 + res2);
+
+
+		// A, B, and C are the thermistor parameters for our particular thermistor:
+		// http://mcshaneinc.com/html/TS165_Specs.html
+		double trA = 0.000382031593048618;
+		double trB = 0.000231333043863669;
+		double trC = 0.0000000449148;
+
+		// we need ln(ohms) and ln^3(ohms)
+		double lnohms = Math.log(ohms_d);
+		double lnohms_cubed = Math.pow(lnohms, 3);
+		
+		// convert the ohms into temperature using thermistor equation
+		// T = (1/(A + B*ln(ohms) + C*ln^3(ohms)) - 273.15
+		double temp_K = 0; // Kelvin
+		double temp_C = 0; // Celcius
+
+		//temp_K = FDIV(FASSIGN_INT(1),FADD(trA, FADD(FMUL(trB, lnohms), FMUL(trC, lnohms_cubed))));
+		temp_K =  1.0/(trA + trB * lnohms + trC * lnohms_cubed);
+		
+		temp_C = temp_K - 273.15;
+		//FLOATTOWSTR(temp_C, strout, 64);
+		//DBGPRINTF("temp_c is %S", strout);
+
+		return temp_C;		
+		
+	}
 	
 	private double doSPL(short [] data, int dataSize) {
 		
