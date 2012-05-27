@@ -101,65 +101,165 @@ public class AudioService extends WakefulIntentService {
 		record16bit(this, interval);
 	}
 
-//	TODO: The read call needs to go in a timer-called function. Can't hold up this
-	//		service every time a file is being written to, makes this call blocking. 
-	//		but the buffered output stream should be pretty good. Test to see if i still
-	//		get the buffer overflow if im just copying the data into another buffer. cuz
-	//		even a non-blocking call will have to do that. unless i alternate buffers i guess.
 	
-	// We implement a separate function for recording 16 bit, because all data structures below assume
-	//	16 bit, so use shorts, instead of bytes.
-	// If duration is set to -1, then record continously
+	private int pickSoundVol(int vol) {
+		switch(vol) {
+		
+		case 1:
+			return R.raw.signed_16bit_44100_400hz_01;
+		case 2:
+			return R.raw.signed_16bit_44100_400hz_02;
+		case 3:
+			return R.raw.signed_16bit_44100_400hz_03;
+		case 4:
+			return R.raw.signed_16bit_44100_400hz_04;
+		case 5:
+			return R.raw.signed_16bit_44100_400hz_05;
+		case 6:
+			return R.raw.signed_16bit_44100_400hz_06;
+		case 7:
+			return R.raw.signed_16bit_44100_400hz_07;
+		case 8:
+			return R.raw.signed_16bit_44100_400hz_08;
+		case 9:
+			return R.raw.signed_16bit_44100_400hz_09;
+		case 10:
+			return R.raw.signed_16bit_44100_400hz_10;
+		case 11:
+			return R.raw.signed_16bit_44100_400hz_11;
+		case 12:
+			return R.raw.signed_16bit_44100_400hz_12;
+		case 13:
+			return R.raw.signed_16bit_44100_400hz_13;
+		case 14:
+			return R.raw.signed_16bit_44100_400hz_14;
+		case 15:
+			return R.raw.signed_16bit_44100_400hz_15;
+		case 16:
+			return R.raw.signed_16bit_44100_400hz_16;
+		case 17:
+			return R.raw.signed_16bit_44100_400hz_17;
+		case 18:
+			return R.raw.signed_16bit_44100_400hz_18;
+		case 19:
+			return R.raw.signed_16bit_44100_400hz_19;
+		case 20:
+			return R.raw.signed_16bit_44100_400hz_20;
+		case 21:
+			return R.raw.signed_16bit_44100_400hz_21;
+		case 22:
+			return R.raw.signed_16bit_44100_400hz_22;
+		case 23:
+			return R.raw.signed_16bit_44100_400hz_23;
+		case 24:
+			return R.raw.signed_16bit_44100_400hz_24;
+		case 25:
+			return R.raw.signed_16bit_44100_400hz_25;
+		case 26:
+			return R.raw.signed_16bit_44100_400hz_26;
+		case 27:
+			return R.raw.signed_16bit_44100_400hz_27;
+		case 28:
+			return R.raw.signed_16bit_44100_400hz_28;
+		case 29:
+			return R.raw.signed_16bit_44100_400hz_29;
+		case 30:
+			return R.raw.signed_16bit_44100_400hz_30;
+		case 31:
+			return R.raw.signed_16bit_44100_400hz_31;
+		case 32:
+			return R.raw.signed_16bit_44100_400hz_32;
+		case 33:
+			return R.raw.signed_16bit_44100_400hz_33;
+		case 34:
+			return R.raw.signed_16bit_44100_400hz_34;
+		case 35:
+			return R.raw.signed_16bit_44100_400hz_35;
+		case 36:
+			return R.raw.signed_16bit_44100_400hz_36;
+		case 37:
+			return R.raw.signed_16bit_44100_400hz_37;
+		case 38:
+			return R.raw.signed_16bit_44100_400hz_38;
+		case 39:
+			return R.raw.signed_16bit_44100_400hz_39;
+		case 40:
+			return R.raw.signed_16bit_44100_400hz_40;
+		default:
+			return R.raw.signed_16bit_44100_400hz_30;		
+		}
+		
+	}
+
+	private AudioTrack playbackFile(Context context, int vol) {
+		
+		byte[] byteoutbuffer = new byte[4410*2];
+		int audioFileBytesIn = 0;
+		try {
+			audioFileBytesIn = getResources().openRawResource(pickSoundVol(vol)).read(byteoutbuffer);
+			audioFileBytesIn += getResources().openRawResource(pickSoundVol(vol)).read(byteoutbuffer, audioFileBytesIn, 4410);
+		} catch (NotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		short[] outbuffer = new short[audioFileBytesIn/2];
+		ByteBuffer.wrap(byteoutbuffer).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(outbuffer);
+				
+		int playMinBufferSizeInBytes = AudioTrack.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIGURATION, AUDIO_ENCODING);
+
+		Log.d(TAG, "-- Play min buf size: " + playMinBufferSizeInBytes + " -- Read in file: " + audioFileBytesIn);
+		
+		AudioTrack track = new AudioTrack(AudioManager.STREAM_MUSIC, 44100, CHANNEL_CONFIGURATION, AUDIO_ENCODING, audioFileBytesIn, AudioTrack.MODE_STATIC);
+		track.write(outbuffer, 0, audioFileBytesIn/2);
+		track.setLoopPoints(0, audioFileBytesIn / 2, -1);
+		Log.e(TAG, "Native sample rate: " + AudioTrack.getNativeOutputSampleRate(AudioTrack.MODE_STATIC));
+		track.play();
+		
+		return track;
+		
+	}
+	
+	
 	private void record16bit(Context context, double interval) {
+			SharedPreferences prefs = context.getSharedPreferences("prefs", MODE_PRIVATE);
 			
-			byte[] byteoutbuffer = new byte[56448];
-			int audioFileBytesIn = 0;
-			try {
-				audioFileBytesIn = getResources().openRawResource(R.raw.signed_16_bit_22050_400hz_30).read(byteoutbuffer);
-			} catch (NotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			short[] outbuffer = new short[audioFileBytesIn/2];
-			ByteBuffer.wrap(byteoutbuffer).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(outbuffer);
+			int vol = prefs.getInt("vol", 30);
+			int volnew = vol;
 			
+			AudioTrack track = playbackFile(context, vol);
 			
 			int minBufferSizeInBytes = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIGURATION, AUDIO_ENCODING);
-			int playMinBufferSizeInBytes = AudioTrack.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIGURATION, AUDIO_ENCODING);
 			int bufferSize = (int) (SAMPLE_RATE * interval);
 			int bufferSizeInBytes = bufferSize * 2;
 			
-			
-			Log.e(TAG, "Record min buf size: " + minBufferSizeInBytes + " -- Play min buf size: " + playMinBufferSizeInBytes + " -- Actual buff size: " + bufferSizeInBytes + " -- Read in file: " + audioFileBytesIn);
+			Log.d(TAG, "Record min buf size: " + minBufferSizeInBytes + " -- Actual buff size: " + bufferSizeInBytes);
 			
 			if (bufferSizeInBytes < minBufferSizeInBytes) {
 				Log.e(TAG, "Requested buffer size (" + bufferSizeInBytes + ") is smaller than minimum allowed buffer (" + minBufferSizeInBytes + ")");
 				Toast.makeText(context, "Requested buffer size (" + bufferSizeInBytes + ") is smaller than minimum allowed buffer (" + minBufferSizeInBytes + ")", Toast.LENGTH_LONG).show();
 			} else {
 				short[] buffer = new short[bufferSize];
-				
-				AudioTrack track = new AudioTrack(AudioManager.STREAM_MUSIC, 44100, CHANNEL_CONFIGURATION, AUDIO_ENCODING, audioFileBytesIn, AudioTrack.MODE_STATIC);
-				track.write(outbuffer, 0, audioFileBytesIn/2);
-				track.setLoopPoints(0, audioFileBytesIn / 2, -1);
-				Log.e(TAG, "Native sample rate: " + AudioTrack.getNativeOutputSampleRate(AudioTrack.MODE_STATIC));
-				track.play();
-				
+
 				AudioRecord audioRecord = new AudioRecord(
 						MediaRecorder.AudioSource.MIC, SAMPLE_RATE, CHANNEL_CONFIGURATION, AUDIO_ENCODING, bufferSizeInBytes);	
 				audioRecord.startRecording();
-				
-				SharedPreferences prefs = context.getSharedPreferences("prefs", MODE_PRIVATE); 
-				
+								
 				while (prefs.getBoolean("recording", false)) {
 					int bufferReadResult = audioRecord.read(buffer, 0, bufferSize);
 					
 					if (bufferReadResult > 0) {
-						doProcessing(buffer, bufferSize);
+						doProcessing(buffer, bufferSize, prefs);
 					} else {
 						Log.e(TAG, "AudioRecord.read() returned " + bufferReadResult);
+					}
+					volnew = prefs.getInt("vol", 30);
+					if (volnew != vol) {
+						vol = volnew;
+						track.stop();
+						track = playbackFile(context, vol);
 					}
 				}
 				
@@ -168,11 +268,12 @@ public class AudioService extends WakefulIntentService {
 			}
 	}
 	
-	private void doProcessing(short [] data, int dataSize) {
+	private void doProcessing(short [] data, int dataSize, SharedPreferences prefs) {
 	
 		int avgPeak = doPeakFinder(data, dataSize);
 		mListener.onPeakUpdated(avgPeak);
-		mListener.onSplUpdated(doTempCalculation(avgPeak));				
+		mListener.onSplUpdated((double) prefs.getInt("vol", 30));
+		//mListener.onSplUpdated(doTempCalculation(avgPeak));				
 		//mListener.onSplUpdated(doSPL(data, dataSize));		
 	}
 	

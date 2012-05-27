@@ -43,9 +43,11 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.View.OnClickListener;
@@ -75,6 +77,8 @@ public class MainActivity extends Activity implements IListener{
     RadioButton mRadio25;
     RadioButton mRadio50;
     double mInterval;
+    
+    private AudioManager audio;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -136,7 +140,12 @@ public class MainActivity extends Activity implements IListener{
         mPeakText.setText("-----");
 		mSplText.setText("-----");
         
-        mRadio10.setChecked(true);
+        mRadio50.setChecked(true);
+        
+        mPrefs.edit().putInt("vol", 30).commit();
+        
+        audio = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
     }
     
     @Override
@@ -162,6 +171,49 @@ public class MainActivity extends Activity implements IListener{
 		super.onStop();
 		unregisterReceiver(mHeadsetReceiver);
 	}
+    
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        int curvol = 30;
+
+    	switch (keyCode) {
+        case KeyEvent.KEYCODE_VOLUME_UP:
+        	setMaxVol();
+        	curvol = mPrefs.getInt("vol", 30);
+        	mPrefs.edit().putInt("vol",getNextVolLevel(curvol, true)).commit();
+            return true;
+        case KeyEvent.KEYCODE_VOLUME_DOWN:
+        	setMaxVol();
+        	curvol = mPrefs.getInt("vol", 30);
+        	mPrefs.edit().putInt("vol",getNextVolLevel(curvol, false)).commit();
+            return true;
+        default:
+        	return super.onKeyDown(keyCode, event); 
+        }
+    }
+
+    private void setMaxVol() {
+        AudioManager am = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
+        int maxvol = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+		int currvol = am.getStreamVolume(AudioManager.STREAM_MUSIC);
+		Log.d(TAG, "Curr volume " + Integer.toString(currvol) + " Max volume: " + Integer.toString(maxvol));
+		if (currvol != maxvol) {
+			am.setStreamVolume(AudioManager.STREAM_MUSIC, maxvol, 0);
+		}
+		Log.d(TAG, "Curr volume now " + Integer.toString(currvol) + " Max volume: " + Integer.toString(maxvol));
+    }
+    
+    private int getNextVolLevel(int vol, boolean up) {
+    	if (up)
+    		vol = vol + 1;
+    	else
+    		vol = vol - 1;
+    	if (vol == 41)
+    		vol = 1;
+    	if (vol == 0)
+    		vol = 40;
+    	return vol;
+    }
 
 	private void updateButtonAndIndicatorState(boolean isRecording) {
 		if (isRecording) {
@@ -201,7 +253,7 @@ public class MainActivity extends Activity implements IListener{
 			
 			@Override
 			public void run() {
-				DecimalFormat df = new DecimalFormat("#.##");
+				DecimalFormat df = new DecimalFormat("#.");
 				mSplText.setText(df.format(value));
 			}
 		});
