@@ -208,10 +208,10 @@ public class MainActivity extends Activity implements IListener{
     		vol = vol + 1;
     	else
     		vol = vol - 1;
-    	if (vol == 41)
+    	if (vol == 101)
     		vol = 1;
     	if (vol == 0)
-    		vol = 40;
+    		vol = 100;
     	return vol;
     }
 
