@@ -27,15 +27,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.nexleaf.soundproof.preamp;
 
+import java.io.BufferedOutputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.content.res.Resources.NotFoundException;
@@ -44,8 +54,11 @@ import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
+import android.os.BatteryManager;
 import android.os.Binder;
+import android.os.Environment;
 import android.os.IBinder;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -310,6 +323,21 @@ public class AudioService extends WakefulIntentService {
 		}
 		
 	}
+	
+	private String getFileName(Context context) {
+		SharedPreferences prefs = context.getSharedPreferences("prefs", MODE_PRIVATE);
+		/* Get month and year by UTC */
+		long currMillis = System.currentTimeMillis();
+		Date currDate = new Date(currMillis);
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyMMddHHmmss", Locale.US);
+		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+		String yearmonthday = sdf.format(currDate);		
+			
+		int vol = prefs.getInt("vol", 30);
+		String title = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" +  yearmonthday + "_" + Integer.toString(vol) +".log";
+		return title;
+	
+	}
 
 	private AudioTrack playbackFile(Context context, int vol) {
 		
@@ -346,6 +374,23 @@ public class AudioService extends WakefulIntentService {
 	private void record16bit(Context context, double interval) {
 			SharedPreferences prefs = context.getSharedPreferences("prefs", MODE_PRIVATE);
 			
+			String fname = this.getFileName(context);
+			File file = new File(fname);
+			Log.e(TAG, "Creatung file: " + fname);
+			FileOutputStream os = null;
+			BufferedOutputStream bos = null; 
+			DataOutputStream dos = null;
+			try {
+				file.createNewFile();
+				os = new FileOutputStream(file);
+				bos = new BufferedOutputStream(os);
+				dos = new DataOutputStream(bos); 
+			} catch (IOException e) {
+				e.printStackTrace();
+				Log.e(TAG, "CANNOT CREATE FILE: " + fname);
+				file = null;
+			}
+			
 			int vol = prefs.getInt("vol", 30);
 			int volnew = vol;
 			
@@ -371,7 +416,7 @@ public class AudioService extends WakefulIntentService {
 					int bufferReadResult = audioRecord.read(buffer, 0, bufferSize);
 					
 					if (bufferReadResult > 0) {
-						doProcessing(buffer, bufferSize, prefs);
+						doProcessing(buffer, bufferSize, prefs, dos);
 					} else {
 						Log.e(TAG, "AudioRecord.read() returned " + bufferReadResult);
 					}
@@ -386,11 +431,31 @@ public class AudioService extends WakefulIntentService {
 				audioRecord.stop();
 				track.stop();
 			}
+			if (dos != null) {
+				try {
+					dos.flush();
+					dos.close();
+
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			
+			
 	}
 	
-	private void doProcessing(short [] data, int dataSize, SharedPreferences prefs) {
+	private void doProcessing(short [] data, int dataSize, SharedPreferences prefs, DataOutputStream dos) {
 	
 		int avgPeak = doPeakFinder(data, dataSize);
+		if (dos != null) {
+			try {
+				dos.writeBytes(Integer.toString(avgPeak) + "\n");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		mListener.onPeakUpdated(avgPeak);
 		mListener.onSplUpdated((double) prefs.getInt("vol", 30));
 		//mListener.onSplUpdated(doTempCalculation(avgPeak));				

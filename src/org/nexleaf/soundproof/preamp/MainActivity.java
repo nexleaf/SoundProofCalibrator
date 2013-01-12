@@ -145,7 +145,28 @@ public class MainActivity extends Activity implements IListener{
         mPrefs.edit().putInt("vol", 30).commit();
         
         audio = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-
+        
+        Log.i(TAG, "BOARD: |" + android.os.Build.BOARD + "|");
+        Log.i(TAG, "BOOTLOADER: |" + android.os.Build.BOOTLOADER + "|");
+        Log.i(TAG, "BRAND: |" + android.os.Build.BRAND + "|");
+        Log.i(TAG, "CPU_ABI: |" + android.os.Build.CPU_ABI + "|");
+        Log.i(TAG, "CPU_ABI2: |" + android.os.Build.CPU_ABI2 + "|");
+        Log.i(TAG, "DEVICE: |" + android.os.Build.DEVICE + "|");
+        Log.i(TAG, "DISPLAY: |" + android.os.Build.DISPLAY + "|");
+        Log.i(TAG, "FINGERPRINT: |" + android.os.Build.FINGERPRINT + "|");
+        Log.i(TAG, "HARDWARE: |" + android.os.Build.HARDWARE + "|");
+        Log.i(TAG, "HOST: |" + android.os.Build.HOST + "|");
+        Log.i(TAG, "ID: |" + android.os.Build.ID + "|");
+        Log.i(TAG, "MANUFACTURER: |" + android.os.Build.MANUFACTURER + "|");
+        Log.i(TAG, "MODEL: |" + android.os.Build.MODEL + "|");
+        Log.i(TAG, "PRODUCT: |" + android.os.Build.PRODUCT + "|");
+        Log.i(TAG, "RADIO: |" + android.os.Build.RADIO + "|");
+        //Log.i(TAG, "SERIAL: |" + android.os.Build.SERIAL + "|");
+        Log.i(TAG, "TAGS: |" + android.os.Build.TAGS + "|");
+        Log.i(TAG, "TIME: |" + Long.toString(android.os.Build.TIME) + "|");
+        Log.i(TAG, "TYPE: |" + android.os.Build.TYPE + "|");
+        Log.i(TAG, "USER: |" + android.os.Build.USER + "|");
+        
     }
     
     @Override
@@ -281,8 +302,8 @@ public class MainActivity extends Activity implements IListener{
 			
 			mMicStatusText.setTextColor(Color.LTGRAY);
 			
-			Log.i("TAG", "state = " + intent.getIntExtra("state", -1));
-			Log.i("TAG", "microphone = " + intent.getIntExtra("microphone", -1));
+			Log.i(TAG, "state = " + intent.getIntExtra("state", -1));
+			Log.i(TAG, "microphone = " + intent.getIntExtra("microphone", -1));
 			Toast.makeText(MainActivity.this, "Headset event:\nstate = " + intent.getIntExtra("state", -1) + "\nmicrophone = " + intent.getIntExtra("microphone", -1), Toast.LENGTH_LONG).show();
 			
 			if (intent.hasExtra("state")) {
